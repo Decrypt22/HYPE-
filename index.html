@@ -51,4 +51,59 @@
   <audio id="alert-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
   <script>
-    let previousBigBuyPrices = new Set
+    let previousBigBuyPrices = new Set();
+
+    async function loadOrderBook() {
+      const url = "https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=50";
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        const asks = data.asks;
+        const bids = data.bids;
+        const maxRows = Math.max(asks.length, bids.length);
+
+        const tbody = document.getElementById("orderbook");
+        tbody.innerHTML = "";
+
+        const currentBigBuyPrices = new Set();
+
+        for (let i = 0; i < maxRows; i++) {
+          const ask = asks[i] || ["", ""];
+          const bid = bids[i] || ["", ""];
+          const askQty = parseFloat(ask[1]);
+          const bidQty = parseFloat(bid[1]);
+          const bidPrice = parseFloat(bid[0]).toFixed(6);
+
+          // Track if bid is a big buy
+          const isBigBuy = bidQty > 100;
+          if (isBigBuy) currentBigBuyPrices.add(bidPrice);
+
+          // Sound for new big buy bids
+          if (isBigBuy && !previousBigBuyPrices.has(bidPrice)) {
+            document.getElementById("alert-sound").play().catch(() => {});
+          }
+
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td class="asks">${parseFloat(ask[0]).toFixed(6)}</td>
+            <td class="asks">${askQty.toFixed(2)}</td>
+            <td class="bids ${isBigBuy ? 'highlight' : ''}">${bidPrice}</td>
+            <td class="bids ${isBigBuy ? 'highlight' : ''}">${bidQty.toFixed(2)}</td>
+          `;
+
+          tbody.appendChild(row);
+        }
+
+        previousBigBuyPrices = currentBigBuyPrices;
+
+      } catch (err) {
+        console.error("Error loading order book:", err);
+      }
+    }
+
+    loadOrderBook();
+    setInterval(loadOrderBook, 3000);
+  </script>
+</body>
+</html>

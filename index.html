@@ -12,6 +12,7 @@
       margin: 0;
       min-height: 100vh;
     }
+
     #live-price {
       position: fixed;
       top: 20px;
@@ -26,11 +27,13 @@
       font-family: monospace;
       z-index: 1000;
     }
+
     h1 {
       text-align: center;
       font-size: 24px;
       margin-bottom: 20px;
     }
+
     table {
       width: 100%;
       border-collapse: separate;
@@ -42,45 +45,57 @@
         0 4px 12px rgba(0, 0, 0, 0.5),
         inset 0 0 15px #222;
     }
+
     thead tr {
       background: #222;
     }
+
     th, td {
       padding: 12px 15px;
       text-align: right;
       border-bottom: 1px solid #444;
       position: relative;
     }
+
     th:first-child, td:first-child {
       border-top-left-radius: 12px;
       border-bottom-left-radius: 12px;
     }
+
     th:last-child, td:last-child {
       border-top-right-radius: 12px;
       border-bottom-right-radius: 12px;
     }
+
     .asks { color: #f55; }
     .bids { color: #5f5; }
+
     .highlight {
       background-color: rgba(0, 123, 255, 0.2);
     }
-    .highlight td:last-child::after {
+
+    .highlight td:nth-child(3) {
+      position: relative;
+    }
+
+    .highlight td:nth-child(3)::before {
       content: "";
       position: absolute;
-      right: 10px;
+      left: -12px;
       top: 50%;
       transform: translateY(-50%);
       width: 10px;
       height: 10px;
       background-color: #5f5;
       border-radius: 50%;
-      box-shadow: 0 0 5px #5f5;
-      animation: glowPulse 2s infinite alternate;
+      box-shadow: 0 0 6px #5f5;
+      animation: glowPulse 2s infinite ease-in-out;
     }
+
     @keyframes glowPulse {
-      0% { opacity: 0.3; box-shadow: 0 0 2px #5f5; }
-      50% { opacity: 1; box-shadow: 0 0 15px #5f5; }
-      100% { opacity: 0.3; box-shadow: 0 0 2px #5f5; }
+      0% { opacity: 0.4; box-shadow: 0 0 3px #5f5; }
+      50% { opacity: 1; box-shadow: 0 0 12px #5f5; }
+      100% { opacity: 0.4; box-shadow: 0 0 3px #5f5; }
     }
   </style>
 </head>
@@ -149,11 +164,12 @@
           }
 
           const row = document.createElement("tr");
+          row.className = isBigBuy ? 'highlight' : '';
           row.innerHTML = `
             <td class="asks">${parseFloat(ask[0]).toFixed(6)}</td>
             <td class="asks">${askQty.toFixed(2)}</td>
-            <td class="bids ${isBigBuy ? 'highlight' : ''}">${bidPrice}</td>
-            <td class="bids ${isBigBuy ? 'highlight' : ''}">${bidQty.toFixed(2)}</td>
+            <td class="bids">${bidPrice}</td>
+            <td class="bids">${bidQty.toFixed(2)}</td>
           `;
           tbody.appendChild(row);
         }

@@ -231,8 +231,8 @@
 
   async function loadLivePrice() {
     try {
-      // Using CORS proxy for Mexc API
-      const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/ticker/price?symbol=HYPEUSDT");
+      // Using a reliable CORS proxy to fetch HYPE/USDT price
+      const res = await fetch("https://api.allorigins.win/raw?url=https://api.mexc.com/api/v3/ticker/price?symbol=HYPEUSDT");
       if (!res.ok) throw new Error("Network response was not ok");
       const data = await res.json();
       const price = parseFloat(data.price).toFixed(6);
@@ -244,7 +244,7 @@
 
   async function loadOrderBook() {
     try {
-      const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=50");
+      const res = await fetch("https://api.allorigins.win/raw?url=https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=50");
       if (!res.ok) throw new Error("Network response was not ok");
       const data = await res.json();
 
@@ -260,11 +260,4 @@
         const ask = asks[i] || ["", ""];
         const bid = bids[i] || ["", ""];
 
-        const bidQty = parseFloat(bid[1]) || 0;
-        const bidPriceRaw = bid[0];
-        const bidPrice = bidPriceRaw ? parseFloat(bidPriceRaw).toFixed(6) : "";
-
-        const isBigBuy = bidQty > 100;
-
-        if (isBigBuy) {
-          currentBigBuys.set(bidPrice, bidQty);
+        const bidQty = parseFloat(bid

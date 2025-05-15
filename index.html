@@ -28,7 +28,7 @@
   <script>
     async function fetchOrderBook() {
       try {
-        const response = await fetch('https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=1000');
+        const response = await fetch('https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=1000');
         const data = await response.json();
         const asks = data.asks;
         const bids = data.bids;

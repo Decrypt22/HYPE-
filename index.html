@@ -70,23 +70,19 @@
     .asks { color: #f55; }
     .bids { color: #5f5; }
 
-    .highlight td:nth-child(3),
-    .highlight td:nth-child(4) {
-      background-color: rgba(0, 123, 255, 0.2);
-    }
-
     .highlight td:nth-child(3) {
+      background-color: rgba(0, 123, 255, 0.2);
       position: relative;
     }
 
-    .highlight td:nth-child(3)::before {
+    .highlight td:nth-child(3)::after {
       content: "";
       position: absolute;
-      left: -12px;
+      left: 8px;
       top: 50%;
       transform: translateY(-50%);
-      width: 10px;
-      height: 10px;
+      width: 8px;
+      height: 8px;
       background-color: #5f5;
       border-radius: 50%;
       box-shadow: 0 0 6px #5f5;

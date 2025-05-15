@@ -27,18 +27,70 @@
       z-index: 1000;
     }
 
-    #toggle-sound {
+    /* Toggle Switch Container */
+    #toggle-container {
       position: fixed;
       top: 20px;
       right: 20px;
-      background: #333;
-      color: #5f5;
-      border: 2px solid #5f5;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
       z-index: 1000;
+      display: flex;
+      align-items: center;
+      user-select: none;
+    }
+
+    /* The switch - the box around the slider */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+      margin-left: 10px;
+    }
+
+    /* Hide default HTML checkbox */
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    /* The slider */
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #333;
+      border: 2px solid #5f5;
+      border-radius: 34px;
+      transition: background-color 0.3s;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 2px;
+      background-color: #5f5;
+      border-radius: 50%;
+      transition: transform 0.3s ease;
+      box-shadow: 0 0 8px #5f5;
+    }
+
+    input:checked + .slider {
+      background-color: #121;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(24px);
+      box-shadow: 0 0 14px #5f5;
+    }
+
+    #toggle-label {
+      font-weight: bold;
+      color: #5f5;
+      font-size: 14px;
     }
 
     h1 {
@@ -83,6 +135,7 @@
     .highlight td:nth-child(3),
     .highlight td:nth-child(4) {
       background-color: rgba(0, 123, 255, 0.15);
+      color: #5f5 !important;
     }
 
     .highlight td:nth-child(3)::before {
@@ -96,11 +149,13 @@
       background-color: #5f5;
       border-radius: 50%;
       animation: glowPulse 2.5s ease-in-out infinite;
+      box-shadow: 0 0 8px #5f5;
+      z-index: 2;
     }
 
     @keyframes glowPulse {
       0%, 100% {
-        opacity: 0.2;
+        opacity: 0.3;
         box-shadow: 0 0 5px #5f5;
       }
       50% {
@@ -112,7 +167,14 @@
 </head>
 <body>
   <div id="live-price">Loading price...</div>
-  <button id="toggle-sound">Enable Sound</button>
+  <div id="toggle-container">
+    <span id="toggle-label">Sound Off</span>
+    <label class="switch">
+      <input type="checkbox" id="toggle-sound" />
+      <span class="slider"></span>
+    </label>
+  </div>
+
   <h1>HYPE/USDT Order Book (Live)</h1>
 
   <table>
@@ -134,7 +196,7 @@
     <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
   </audio>
   <audio id="disappear-sound" preload="auto">
-    <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
+    <source src="https://actions.google.com/sounds/v1/impacts/subtle_click.ogg" type="audio/ogg">
   </audio>
 
   <script>
@@ -145,21 +207,22 @@
 
     let soundEnabled = false;
 
-    const soundButton = document.getElementById("toggle-sound");
-    soundButton.addEventListener("click", () => {
-      soundEnabled = !soundEnabled;
+    const soundToggle = document.getElementById("toggle-sound");
+    const toggleLabel = document.getElementById("toggle-label");
+
+    soundToggle.addEventListener("change", () => {
+      soundEnabled = soundToggle.checked;
+      toggleLabel.textContent = soundEnabled ? "Sound On" : "Sound Off";
       if (soundEnabled) {
+        // Preload sounds by briefly playing and pausing
         appearSound.play().then(() => {
           appearSound.pause();
           appearSound.currentTime = 0;
-        });
+        }).catch(() => {});
         disappearSound.play().then(() => {
           disappearSound.pause();
           disappearSound.currentTime = 0;
-        });
-        soundButton.textContent = "Disable Sound";
-      } else {
-        soundButton.textContent = "Enable Sound";
+        }).catch(() => {});
       }
     });
 
@@ -218,23 +281,4 @@
         for (let [price] of previousBigBuys) {
           if (!currentBigBuys.has(price) && soundEnabled) {
             disappearSound.currentTime = 0;
-            disappearSound.play().catch(() => {});
-          }
-        }
-
-        previousBigBuys = currentBigBuys;
-      } catch (err) {
-        console.error("Error loading order book:", err);
-      }
-    }
-
-    async function refreshAll() {
-      await loadLivePrice();
-      await loadOrderBook();
-      setTimeout(refreshAll, 3000);
-    }
-
-    refreshAll();
-  </script>
-</body>
-</html>
+            disappearSound.play().

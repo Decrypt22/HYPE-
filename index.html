@@ -70,12 +70,12 @@
     .asks { color: #f55; }
     .bids { color: #5f5; }
 
-    .highlight td:nth-child(3) {
+    .highlight td:nth-child(3),
+    .highlight td:nth-child(4) {
       background-color: rgba(0, 123, 255, 0.2);
-      position: relative;
     }
 
-    .highlight td:nth-child(3)::after {
+    .highlight td:nth-child(3)::before {
       content: "";
       position: absolute;
       left: 8px;

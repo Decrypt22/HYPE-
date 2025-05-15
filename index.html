@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>HYPE/USDT Order Book</title>
@@ -11,93 +10,92 @@
       padding: 20px;
       margin: 0;
       min-height: 100vh;
-    }
+    }#live-price {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #5f5;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #3a3;
+  font-family: monospace;
+  z-index: 1000;
+}
 
-    #live-price {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      font-size: 20px;
-      font-weight: 700;
-      color: #5f5;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 8px 12px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px #3a3;
-      font-family: monospace;
-      z-index: 1000;
-    }
+h1 {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
 
-    h1 {
-      text-align: center;
-      font-size: 24px;
-      margin-bottom: 20px;
-    }
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #121212, #1c1c1c);
+  box-shadow:
+    0 8px 16px rgba(0, 0, 0, 0.7),
+    0 4px 12px rgba(0, 0, 0, 0.5),
+    inset 0 0 15px #222;
+}
 
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      border-radius: 12px;
-      background: linear-gradient(145deg, #121212, #1c1c1c);
-      box-shadow:
-        0 8px 16px rgba(0, 0, 0, 0.7),
-        0 4px 12px rgba(0, 0, 0, 0.5),
-        inset 0 0 15px #222;
-    }
+thead tr {
+  background: #222;
+}
 
-    thead tr {
-      background: #222;
-    }
+th, td {
+  padding: 12px 15px;
+  text-align: right;
+  border-bottom: 1px solid #444;
+  position: relative;
+}
 
-    th, td {
-      padding: 12px 15px;
-      text-align: right;
-      border-bottom: 1px solid #444;
-      position: relative;
-    }
+th:first-child, td:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
 
-    th:first-child, td:first-child {
-      border-top-left-radius: 12px;
-      border-bottom-left-radius: 12px;
-    }
+th:last-child, td:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
 
-    th:last-child, td:last-child {
-      border-top-right-radius: 12px;
-      border-bottom-right-radius: 12px;
-    }
+.asks { color: #f55; }
+.bids { color: #5f5; }
 
-    .asks { color: #f55; }
-    .bids { color: #5f5; }
+.highlight td:nth-child(3),
+.highlight td:nth-child(4) {
+  background-color: rgba(0, 123, 255, 0.15);
+}
 
-    .highlight td:nth-child(3),
-    .highlight td:nth-child(4) {
-      background-color: rgba(0, 123, 255, 0.15);
-    }
+.highlight td:nth-child(3)::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  background-color: #5f5;
+  border-radius: 50%;
+  animation: glowPulse 2.5s ease-in-out infinite;
+}
 
-    .highlight td:nth-child(3)::before {
-      content: "";
-      position: absolute;
-      left: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 8px;
-      height: 8px;
-      background-color: #5f5;
-      border-radius: 50%;
-      animation: glowPulse 2.5s ease-in-out infinite;
-    }
+@keyframes glowPulse {
+  0%, 100% {
+    opacity: 0.2;
+    box-shadow: 0 0 5px #5f5;
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 14px #5f5;
+  }
+}
 
-    @keyframes glowPulse {
-      0%, 100% {
-        opacity: 0.2;
-        box-shadow: 0 0 5px #5f5;
-      }
-      50% {
-        opacity: 1;
-        box-shadow: 0 0 14px #5f5;
-      }
-    }
   </style>
 </head>
 <body>
@@ -115,20 +113,16 @@
       </tr>
     </thead>
     <tbody id="orderbook"></tbody>
-  </table>
-
-  <audio id="alert-sound" preload="auto">
+  </table>  <audio id="alert-sound" preload="auto">
     <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
-  </audio>
-
-  <script>
+  </audio>  <script>
     const alertSound = document.getElementById("alert-sound");
     alertSound.volume = 1.0;
     let previousBigBuyPrices = new Set();
 
     async function loadLivePrice() {
       try {
-        const res = await fetch("https://api.allorigins.win/raw?url=https://api.mexc.com/api/v3/ticker/price?symbol=HYPEUSDT");
+        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/ticker/price?symbol=HYPEUSDT");
         const data = await res.json();
         const price = parseFloat(data.price).toFixed(6);
         document.getElementById("live-price").textContent = `HYPE/USDT: ${price}`;
@@ -139,7 +133,7 @@
 
     async function loadOrderBook() {
       try {
-        const res = await fetch("https://api.allorigins.win/raw?url=https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=50");
+        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=50");
         const data = await res.json();
         const asks = data.asks;
         const bids = data.bids;
@@ -187,6 +181,5 @@
     }
 
     refreshAll();
-  </script>
-</body>
+  </script></body>
 </html>

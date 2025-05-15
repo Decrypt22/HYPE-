@@ -27,6 +27,20 @@
       z-index: 1000;
     }
 
+    #enable-sound {
+      position: fixed;
+      top: 60px;
+      left: 20px;
+      background: #333;
+      color: #5f5;
+      border: 2px solid #5f5;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      z-index: 1000;
+    }
+
     h1 {
       text-align: center;
       font-size: 24px;
@@ -98,7 +112,9 @@
 </head>
 <body>
   <div id="live-price">Loading price...</div>
+  <button id="enable-sound">Enable Sound</button>
   <h1>HYPE/USDT Order Book (Live)</h1>
+
   <table>
     <thead>
       <tr>
@@ -113,14 +129,33 @@
     <tbody id="orderbook"></tbody>
   </table>
 
-  <audio id="alert-sound" preload="auto">
+  <!-- Sound Effects -->
+  <audio id="appear-sound" preload="auto">
     <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+  </audio>
+  <audio id="disappear-sound" preload="auto">
+    <source src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" type="audio/ogg">
   </audio>
 
   <script>
-    const alertSound = document.getElementById("alert-sound");
-    alertSound.volume = 1.0;
+    const appearSound = document.getElementById("appear-sound");
+    const disappearSound = document.getElementById("disappear-sound");
+    appearSound.volume = 1.0;
+    disappearSound.volume = 1.0;
+
     let previousBigBuys = new Map();
+
+    document.getElementById("enable-sound").addEventListener("click", () => {
+      appearSound.play().then(() => {
+        appearSound.pause(); appearSound.currentTime = 0;
+        disappearSound.play().then(() => {
+          disappearSound.pause(); disappearSound.currentTime = 0;
+          document.getElementById("enable-sound").style.display = "none";
+        });
+      }).catch(() => {
+        alert("Tap again to enable sound.");
+      });
+    });
 
     async function loadLivePrice() {
       try {
@@ -149,16 +184,14 @@
           const ask = asks[i] || ["", ""];
           const bid = bids[i] || ["", ""];
           const bidQty = parseFloat(bid[1]);
-          const bidPrice = parseFloat(bid[0]).toFixed(6); // Format as string
+          const bidPrice = parseFloat(bid[0]).toFixed(6);
           const isBigBuy = bidQty > 100;
 
           if (isBigBuy) {
             currentBigBuys.set(bidPrice, bidQty);
-
-            // If new big buy added
             if (!previousBigBuys.has(bidPrice)) {
-              alertSound.currentTime = 0;
-              alertSound.play().catch(() => {});
+              appearSound.currentTime = 0;
+              appearSound.play().catch(() => {});
             }
           }
 
@@ -174,11 +207,10 @@
           tbody.appendChild(row);
         }
 
-        // Play alert if a previous big buy order disappeared
         for (let [price] of previousBigBuys) {
           if (!currentBigBuys.has(price)) {
-            alertSound.currentTime = 0;
-            alertSound.play().catch(() => {});
+            disappearSound.currentTime = 0;
+            disappearSound.play().catch(() => {});
           }
         }
 

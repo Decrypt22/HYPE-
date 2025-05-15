@@ -10,7 +10,10 @@
       font-family: monospace;
       padding: 20px;
     }
-    h1 { text-align: center; }
+    h1 {
+      text-align: center;
+      font-size: 24px;
+    }
     table {
       width: 100%;
       border-collapse: collapse;
@@ -24,40 +27,17 @@
     th {
       background: #222;
     }
-    .asks { color: #f55; }
-    .bids { color: #5f5; }
+    .asks {
+      color: #f55;
+    }
+    .bids {
+      color: #5f5;
+    }
     .highlight {
-      background-color: yellow;
+      background-color: #ccffcc; /* even lighter green */
       color: #000 !important;
     }
-  </style><style>
-  body {
-    background: #0e0e0e;
-    color: #fff;
-    font-family: monospace;
-    padding: 20px;
-  }
-  h1 { text-align: center; }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-  }
-  th, td {
-    border: 1px solid #444;
-    padding: 5px;
-    text-align: right;
-  }
-  th {
-    background: #222;
-  }
-  .asks { color: #f55; }
-  .bids { color: #5f5; }
-  .highlight {
-    background-color: #90ee90; /* light green */
-    color: #000 !important;
-  }
-</style>
+  </style>
 </head>
 <body>
   <h1>HYPE/USDT Order Book (Live)</h1>
@@ -102,11 +82,9 @@
           const bidQty = parseFloat(bid[1]);
           const bidPrice = parseFloat(bid[0]).toFixed(6);
 
-          // Track if bid is a big buy
           const isBigBuy = bidQty > 100;
           if (isBigBuy) currentBigBuyPrices.add(bidPrice);
 
-          // Sound for new big buy bids
           if (isBigBuy && !previousBigBuyPrices.has(bidPrice)) {
             document.getElementById("alert-sound").play().catch(() => {});
           }
@@ -118,7 +96,6 @@
             <td class="bids ${isBigBuy ? 'highlight' : ''}">${bidPrice}</td>
             <td class="bids ${isBigBuy ? 'highlight' : ''}">${bidQty.toFixed(2)}</td>
           `;
-
           tbody.appendChild(row);
         }
 

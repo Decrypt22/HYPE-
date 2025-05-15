@@ -25,9 +25,11 @@
       box-shadow: 0 0 10px #3a3;
       font-family: monospace;
       z-index: 1000;
+      user-select: none;
+      min-width: 160px;
+      text-align: center;
     }
 
-    /* Toggle Switch Container */
     #toggle-container {
       position: fixed;
       top: 20px;
@@ -36,9 +38,11 @@
       display: flex;
       align-items: center;
       user-select: none;
+      font-weight: bold;
+      color: #5f5;
+      font-size: 14px;
     }
 
-    /* The switch - the box around the slider */
     .switch {
       position: relative;
       display: inline-block;
@@ -47,14 +51,12 @@
       margin-left: 10px;
     }
 
-    /* Hide default HTML checkbox */
     .switch input {
       opacity: 0;
       width: 0;
       height: 0;
     }
 
-    /* The slider */
     .slider {
       position: absolute;
       cursor: pointer;
@@ -74,7 +76,7 @@
       bottom: 2px;
       background-color: #5f5;
       border-radius: 50%;
-      transition: transform 0.3s ease;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
       box-shadow: 0 0 8px #5f5;
     }
 
@@ -87,16 +89,11 @@
       box-shadow: 0 0 14px #5f5;
     }
 
-    #toggle-label {
-      font-weight: bold;
-      color: #5f5;
-      font-size: 14px;
-    }
-
     h1 {
       text-align: center;
       font-size: 24px;
       margin-bottom: 20px;
+      user-select: none;
     }
 
     table {
@@ -117,6 +114,7 @@
       text-align: right;
       border-bottom: 1px solid #444;
       position: relative;
+      user-select: none;
     }
 
     th:first-child, td:first-child {
@@ -141,7 +139,7 @@
     .highlight td:nth-child(3)::before {
       content: "";
       position: absolute;
-      left: 8px;
+      left: 6px;
       top: 50%;
       transform: translateY(-50%);
       width: 8px;
@@ -167,6 +165,7 @@
 </head>
 <body>
   <div id="live-price">Loading price...</div>
+
   <div id="toggle-container">
     <span id="toggle-label">Sound Off</span>
     <label class="switch">
@@ -191,7 +190,6 @@
     <tbody id="orderbook"></tbody>
   </table>
 
-  <!-- Sound Effects -->
   <audio id="appear-sound" preload="auto">
     <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
   </audio>
@@ -199,86 +197,74 @@
     <source src="https://actions.google.com/sounds/v1/impacts/subtle_click.ogg" type="audio/ogg">
   </audio>
 
-  <script>
-    const appearSound = document.getElementById("appear-sound");
-    const disappearSound = document.getElementById("disappear-sound");
-    appearSound.volume = 1.0;
-    disappearSound.volume = 1.0;
+<script>
+  const appearSound = document.getElementById("appear-sound");
+  const disappearSound = document.getElementById("disappear-sound");
+  appearSound.volume = 1.0;
+  disappearSound.volume = 1.0;
 
-    let soundEnabled = false;
+  let soundEnabled = false;
 
-    const soundToggle = document.getElementById("toggle-sound");
-    const toggleLabel = document.getElementById("toggle-label");
+  const soundToggle = document.getElementById("toggle-sound");
+  const toggleLabel = document.getElementById("toggle-label");
 
-    soundToggle.addEventListener("change", () => {
-      soundEnabled = soundToggle.checked;
-      toggleLabel.textContent = soundEnabled ? "Sound On" : "Sound Off";
-      if (soundEnabled) {
-        // Preload sounds by briefly playing and pausing
-        appearSound.play().then(() => {
-          appearSound.pause();
-          appearSound.currentTime = 0;
-        }).catch(() => {});
-        disappearSound.play().then(() => {
-          disappearSound.pause();
-          disappearSound.currentTime = 0;
-        }).catch(() => {});
-      }
-    });
+  soundToggle.addEventListener("change", () => {
+    soundEnabled = soundToggle.checked;
+    toggleLabel.textContent = soundEnabled ? "Sound On" : "Sound Off";
 
-    let previousBigBuys = new Map();
+    if (soundEnabled) {
+      // Preload sounds to avoid delay on first play
+      appearSound.play().then(() => {
+        appearSound.pause();
+        appearSound.currentTime = 0;
+      }).catch(() => {});
 
-    async function loadLivePrice() {
-      try {
-        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/ticker/price?symbol=HYPEUSDT");
-        const data = await res.json();
-        const price = parseFloat(data.price).toFixed(6);
-        document.getElementById("live-price").textContent = `HYPE/USDT: ${price}`;
-      } catch {
-        document.getElementById("live-price").textContent = "Error loading price";
-      }
+      disappearSound.play().then(() => {
+        disappearSound.pause();
+        disappearSound.currentTime = 0;
+      }).catch(() => {});
     }
+  });
 
-    async function loadOrderBook() {
-      try {
-        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=50");
-        const data = await res.json();
-        const asks = data.asks;
-        const bids = data.bids;
-        const tbody = document.getElementById("orderbook");
-        tbody.innerHTML = "";
+  // Store previous big buys to detect appear/disappear
+  let previousBigBuys = new Map();
 
-        const max = Math.max(asks.length, bids.length);
-        const currentBigBuys = new Map();
+  async function loadLivePrice() {
+    try {
+      // Using CORS proxy for Mexc API
+      const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/ticker/price?symbol=HYPEUSDT");
+      if (!res.ok) throw new Error("Network response was not ok");
+      const data = await res.json();
+      const price = parseFloat(data.price).toFixed(6);
+      document.getElementById("live-price").textContent = `HYPE/USDT: ${price}`;
+    } catch {
+      document.getElementById("live-price").textContent = "Error loading price";
+    }
+  }
 
-        for (let i = 0; i < max; i++) {
-          const ask = asks[i] || ["", ""];
-          const bid = bids[i] || ["", ""];
-          const bidQty = parseFloat(bid[1]);
-          const bidPrice = parseFloat(bid[0]).toFixed(6);
-          const isBigBuy = bidQty > 100;
+  async function loadOrderBook() {
+    try {
+      const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=50");
+      if (!res.ok) throw new Error("Network response was not ok");
+      const data = await res.json();
 
-          if (isBigBuy) {
-            currentBigBuys.set(bidPrice, bidQty);
-            if (!previousBigBuys.has(bidPrice) && soundEnabled) {
-              appearSound.currentTime = 0;
-              appearSound.play().catch(() => {});
-            }
-          }
+      const asks = data.asks;
+      const bids = data.bids;
+      const tbody = document.getElementById("orderbook");
+      tbody.innerHTML = "";
 
-          const row = document.createElement("tr");
-          if (isBigBuy) row.classList.add("highlight");
+      const max = Math.max(asks.length, bids.length);
+      const currentBigBuys = new Map();
 
-          row.innerHTML = `
-            <td class="asks">${parseFloat(ask[0]).toFixed(6)}</td>
-            <td class="asks">${parseFloat(ask[1]).toFixed(2)}</td>
-            <td class="bids">${bidPrice}</td>
-            <td class="bids">${bidQty.toFixed(2)}</td>
-          `;
-          tbody.appendChild(row);
-        }
+      for (let i = 0; i < max; i++) {
+        const ask = asks[i] || ["", ""];
+        const bid = bids[i] || ["", ""];
 
-        for (let [price] of previousBigBuys) {
-          if (!currentBigBuys.has(price) && soundEnabled) {
-            disappearSound.currentTime = 0;
-            disappearSound.play().
+        const bidQty = parseFloat(bid[1]) || 0;
+        const bidPriceRaw = bid[0];
+        const bidPrice = bidPriceRaw ? parseFloat(bidPriceRaw).toFixed(6) : "";
+
+        const isBigBuy = bidQty > 100;
+
+        if (isBigBuy) {
+          currentBigBuys.set(bidPrice, bidQty);

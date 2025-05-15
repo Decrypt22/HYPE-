@@ -10,7 +10,6 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       padding: 20px;
       margin: 0;
-      min-height: 100vh;
     }
 
     #live-price {
@@ -40,10 +39,7 @@
       border-spacing: 0;
       border-radius: 12px;
       background: linear-gradient(145deg, #121212, #1c1c1c);
-      box-shadow:
-        0 8px 16px rgba(0, 0, 0, 0.7),
-        0 4px 12px rgba(0, 0, 0, 0.5),
-        inset 0 0 15px #222;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 0 15px #222;
     }
 
     thead tr {
@@ -132,7 +128,7 @@
         const data = await res.json();
         const price = parseFloat(data.price).toFixed(6);
         document.getElementById("live-price").textContent = `HYPE/USDT: ${price}`;
-      } catch (e) {
+      } catch {
         document.getElementById("live-price").textContent = "Error loading price";
       }
     }
@@ -153,11 +149,13 @@
           const ask = asks[i] || ["", ""];
           const bid = bids[i] || ["", ""];
           const bidQty = parseFloat(bid[1]);
-          const bidPrice = parseFloat(bid[0]).toFixed(6);
+          const bidPrice = parseFloat(bid[0]).toFixed(6); // Format as string
           const isBigBuy = bidQty > 100;
 
           if (isBigBuy) {
             currentBigBuys.set(bidPrice, bidQty);
+
+            // If new big buy added
             if (!previousBigBuys.has(bidPrice)) {
               alertSound.currentTime = 0;
               alertSound.play().catch(() => {});
@@ -176,6 +174,7 @@
           tbody.appendChild(row);
         }
 
+        // Play alert if a previous big buy order disappeared
         for (let [price] of previousBigBuys) {
           if (!currentBigBuys.has(price)) {
             alertSound.currentTime = 0;
@@ -184,8 +183,8 @@
         }
 
         previousBigBuys = currentBigBuys;
-      } catch (e) {
-        console.error("Order book error:", e);
+      } catch (err) {
+        console.error("Error loading order book:", err);
       }
     }
 

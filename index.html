@@ -72,7 +72,7 @@
 
     .highlight td:nth-child(3),
     .highlight td:nth-child(4) {
-      background-color: rgba(0, 123, 255, 0.2);
+      background-color: rgba(0, 123, 255, 0.15);
     }
 
     .highlight td:nth-child(3)::before {
@@ -90,12 +90,12 @@
 
     @keyframes glowPulse {
       0%, 100% {
-        opacity: 0.4;
-        box-shadow: 0 0 6px #5f5;
+        opacity: 0.2;
+        box-shadow: 0 0 5px #5f5;
       }
       50% {
         opacity: 1;
-        box-shadow: 0 0 12px #5f5;
+        box-shadow: 0 0 14px #5f5;
       }
     }
   </style>
@@ -122,9 +122,9 @@
   </audio>
 
   <script>
-    let previousBigBuyPrices = new Set();
-    const alertSound = document.getElementById('alert-sound');
+    const alertSound = document.getElementById("alert-sound");
     alertSound.volume = 1.0;
+    let previousBigBuyPrices = new Set();
 
     async function loadLivePrice() {
       try {
@@ -133,7 +133,6 @@
         const price = parseFloat(data.price).toFixed(6);
         document.getElementById("live-price").textContent = `HYPE/USDT: ${price}`;
       } catch (e) {
-        console.error("Live price error:", e);
         document.getElementById("live-price").textContent = "Error loading price";
       }
     }
@@ -147,18 +146,17 @@
         const tbody = document.getElementById("orderbook");
         tbody.innerHTML = "";
 
-        const maxRows = Math.max(asks.length, bids.length);
-        const currentBigBuyPrices = new Set();
+        const max = Math.max(asks.length, bids.length);
+        const currentBigBuys = new Set();
 
-        for (let i = 0; i < maxRows; i++) {
+        for (let i = 0; i < max; i++) {
           const ask = asks[i] || ["", ""];
           const bid = bids[i] || ["", ""];
-          const askQty = parseFloat(ask[1]);
           const bidQty = parseFloat(bid[1]);
           const bidPrice = parseFloat(bid[0]).toFixed(6);
           const isBigBuy = bidQty > 100;
 
-          if (isBigBuy) currentBigBuyPrices.add(bidPrice);
+          if (isBigBuy) currentBigBuys.add(bidPrice);
           if (isBigBuy && !previousBigBuyPrices.has(bidPrice)) {
             alertSound.currentTime = 0;
             alertSound.play().catch(() => {});
@@ -169,26 +167,26 @@
 
           row.innerHTML = `
             <td class="asks">${parseFloat(ask[0]).toFixed(6)}</td>
-            <td class="asks">${askQty.toFixed(2)}</td>
+            <td class="asks">${parseFloat(ask[1]).toFixed(2)}</td>
             <td class="bids">${bidPrice}</td>
             <td class="bids">${bidQty.toFixed(2)}</td>
           `;
           tbody.appendChild(row);
         }
 
-        previousBigBuyPrices = currentBigBuyPrices;
-      } catch (err) {
-        console.error("Order book error:", err);
+        previousBigBuyPrices = currentBigBuys;
+      } catch (e) {
+        console.error("Order book error:", e);
       }
     }
 
     async function refreshAll() {
       await loadLivePrice();
       await loadOrderBook();
+      setTimeout(refreshAll, 3000); // updates every 3s
     }
 
     refreshAll();
-    setInterval(refreshAll, 3000);
   </script>
 </body>
 </html>

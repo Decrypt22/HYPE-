@@ -70,7 +70,8 @@
     .asks { color: #f55; }
     .bids { color: #5f5; }
 
-    .highlight {
+    .highlight td:nth-child(3),
+    .highlight td:nth-child(4) {
       background-color: rgba(0, 123, 255, 0.2);
     }
 
@@ -164,7 +165,8 @@
           }
 
           const row = document.createElement("tr");
-          row.className = isBigBuy ? 'highlight' : '';
+          if (isBigBuy) row.classList.add("highlight");
+
           row.innerHTML = `
             <td class="asks">${parseFloat(ask[0]).toFixed(6)}</td>
             <td class="asks">${askQty.toFixed(2)}</td>

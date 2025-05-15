@@ -26,6 +26,10 @@
     }
     .asks { color: #f55; }
     .bids { color: #5f5; }
+    .highlight {
+      background-color: yellow;
+      color: #000 !important;
+    }
   </style>
 </head>
 <body>
@@ -44,40 +48,7 @@
     <tbody id="orderbook"></tbody>
   </table>
 
+  <audio id="alert-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
   <script>
-    async function loadOrderBook() {
-      const url = "https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=50";
-      try {
-        const res = await fetch(url);
-        const data = await res.json();
-
-        const asks = data.asks;
-        const bids = data.bids;
-        const maxRows = Math.max(asks.length, bids.length);
-
-        const tbody = document.getElementById("orderbook");
-        tbody.innerHTML = "";
-
-        for (let i = 0; i < maxRows; i++) {
-          const ask = asks[i] || ["", ""];
-          const bid = bids[i] || ["", ""];
-          const row = `
-            <tr>
-              <td class="asks">${parseFloat(ask[0]).toFixed(6)}</td>
-              <td class="asks">${parseFloat(ask[1]).toFixed(2)}</td>
-              <td class="bids">${parseFloat(bid[0]).toFixed(6)}</td>
-              <td class="bids">${parseFloat(bid[1]).toFixed(2)}</td>
-            </tr>
-          `;
-          tbody.innerHTML += row;
-        }
-      } catch (err) {
-        console.error("Error loading order book:", err);
-      }
-    }
-
-    loadOrderBook();
-    setInterval(loadOrderBook, 3000);
-  </script>
-</body>
-</html>
+    let previousBigBuyPrices = new Set

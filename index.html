@@ -85,7 +85,6 @@
       height: 8px;
       background-color: #5f5;
       border-radius: 50%;
-      box-shadow: 0 0 6px #5f5;
       animation: glowPulse 2.5s ease-in-out infinite;
     }
 
@@ -129,7 +128,7 @@
 
     async function loadLivePrice() {
       try {
-        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/ticker/price?symbol=HYPEUSDT");
+        const res = await fetch("https://api.allorigins.win/raw?url=https://api.mexc.com/api/v3/ticker/price?symbol=HYPEUSDT");
         const data = await res.json();
         const price = parseFloat(data.price).toFixed(6);
         document.getElementById("live-price").textContent = `HYPE/USDT: ${price}`;
@@ -141,7 +140,7 @@
 
     async function loadOrderBook() {
       try {
-        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=50");
+        const res = await fetch("https://api.allorigins.win/raw?url=https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=50");
         const data = await res.json();
         const asks = data.asks;
         const bids = data.bids;

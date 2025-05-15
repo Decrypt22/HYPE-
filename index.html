@@ -116,6 +116,18 @@
   <script>
     let previousBigBuyPrices = new Set();
 
+    async function loadLivePrice() {
+      try {
+        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/ticker/price?symbol=HYPEUSDT");
+        const data = await res.json();
+        const price = parseFloat(data.price).toFixed(6);
+        document.getElementById("live-price").textContent = `HYPE/USDT: ${price}`;
+      } catch (e) {
+        console.error("Error fetching live price:", e);
+        document.getElementById("live-price").textContent = "Error loading price";
+      }
+    }
+
     async function loadOrderBook() {
       const url = "https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=50";
       try {
@@ -125,14 +137,6 @@
         const asks = data.asks;
         const bids = data.bids;
         const maxRows = Math.max(asks.length, bids.length);
-
-        // Update live price from mid-price (or last price fallback)
-        // Let's calculate mid price from best ask and bid
-        const bestAsk = parseFloat(asks[0][0]);
-        const bestBid = parseFloat(bids[0][0]);
-        const midPrice = ((bestAsk + bestBid) / 2).toFixed(6);
-
-        document.getElementById("live-price").textContent = `HYPE/USDT: ${midPrice}`;
 
         const tbody = document.getElementById("orderbook");
         tbody.innerHTML = "";
@@ -167,12 +171,16 @@
 
       } catch (err) {
         console.error("Error loading order book:", err);
-        document.getElementById("live-price").textContent = "Error loading price";
       }
     }
 
-    loadOrderBook();
-    setInterval(loadOrderBook, 3000);
+    async function refreshAll() {
+      await loadLivePrice();
+      await loadOrderBook();
+    }
+
+    refreshAll();
+    setInterval(refreshAll, 3000);
   </script>
 </body>
 </html>

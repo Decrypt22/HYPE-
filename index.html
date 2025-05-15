@@ -27,10 +27,10 @@
       z-index: 1000;
     }
 
-    #enable-sound {
+    #toggle-sound {
       position: fixed;
-      top: 60px;
-      left: 20px;
+      top: 20px;
+      right: 20px;
       background: #333;
       color: #5f5;
       border: 2px solid #5f5;
@@ -112,7 +112,7 @@
 </head>
 <body>
   <div id="live-price">Loading price...</div>
-  <button id="enable-sound">Enable Sound</button>
+  <button id="toggle-sound">Enable Sound</button>
   <h1>HYPE/USDT Order Book (Live)</h1>
 
   <table>
@@ -143,19 +143,27 @@
     appearSound.volume = 1.0;
     disappearSound.volume = 1.0;
 
-    let previousBigBuys = new Map();
+    let soundEnabled = false;
 
-    document.getElementById("enable-sound").addEventListener("click", () => {
-      appearSound.play().then(() => {
-        appearSound.pause(); appearSound.currentTime = 0;
-        disappearSound.play().then(() => {
-          disappearSound.pause(); disappearSound.currentTime = 0;
-          document.getElementById("enable-sound").style.display = "none";
+    const soundButton = document.getElementById("toggle-sound");
+    soundButton.addEventListener("click", () => {
+      soundEnabled = !soundEnabled;
+      if (soundEnabled) {
+        appearSound.play().then(() => {
+          appearSound.pause();
+          appearSound.currentTime = 0;
         });
-      }).catch(() => {
-        alert("Tap again to enable sound.");
-      });
+        disappearSound.play().then(() => {
+          disappearSound.pause();
+          disappearSound.currentTime = 0;
+        });
+        soundButton.textContent = "Disable Sound";
+      } else {
+        soundButton.textContent = "Enable Sound";
+      }
     });
+
+    let previousBigBuys = new Map();
 
     async function loadLivePrice() {
       try {
@@ -189,7 +197,7 @@
 
           if (isBigBuy) {
             currentBigBuys.set(bidPrice, bidQty);
-            if (!previousBigBuys.has(bidPrice)) {
+            if (!previousBigBuys.has(bidPrice) && soundEnabled) {
               appearSound.currentTime = 0;
               appearSound.play().catch(() => {});
             }
@@ -208,7 +216,7 @@
         }
 
         for (let [price] of previousBigBuys) {
-          if (!currentBigBuys.has(price)) {
+          if (!currentBigBuys.has(price) && soundEnabled) {
             disappearSound.currentTime = 0;
             disappearSound.play().catch(() => {});
           }

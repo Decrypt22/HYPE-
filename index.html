@@ -134,7 +134,7 @@
     <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
   </audio>
   <audio id="disappear-sound" preload="auto">
-    <source src="https://actions.google.com/sounds/v1/foley/soft_whoosh.ogg" type="audio/ogg">
+    <source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" type="audio/ogg">
   </audio>
 
   <script>
@@ -193,7 +193,7 @@
           const bid = bids[i] || ["", ""];
           const bidQty = parseFloat(bid[1]);
           const bidPrice = parseFloat(bid[0]).toFixed(6);
-          const isBigBuy = bidQty > 100;
+          const isBigBuy = bidQty >= 100;
 
           if (isBigBuy) {
             currentBigBuys.set(bidPrice, bidQty);

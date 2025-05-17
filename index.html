@@ -85,6 +85,11 @@
       background-color: rgba(0, 123, 255, 0.15);
     }
 
+    .highlight-big-red td:nth-child(3),
+    .highlight-big-red td:nth-child(4) {
+      background-color: rgba(255, 0, 0, 0.18);
+    }
+
     .highlight td:nth-child(3)::before,
     .highlight-big-red td:nth-child(3)::before {
       content: "";
@@ -97,11 +102,6 @@
       background-color: #5f5;
       border-radius: 50%;
       animation: glowPulse 2.5s ease-in-out infinite;
-    }
-
-    .highlight-big-red td:nth-child(3),
-    .highlight-big-red td:nth-child(4) {
-      background-color: rgba(255, 0, 0, 0.1);
     }
 
     @keyframes glowPulse {
@@ -199,10 +199,10 @@
           const bid = bids[i] || ["", ""];
           const bidQty = parseFloat(bid[1]);
           const bidPrice = parseFloat(bid[0]).toFixed(6);
-          const isBigBuy = bidQty >= 100 && bidQty < 1000;
+          const isBigBuy = bidQty >= 100;
           const isHugeBuy = bidQty >= 1000;
 
-          if (isBigBuy || isHugeBuy) {
+          if (isBigBuy) {
             currentBigBuys.set(bidPrice, bidQty);
             if (!previousBigBuys.has(bidPrice) && soundEnabled) {
               appearSound.currentTime = 0;
@@ -211,8 +211,12 @@
           }
 
           const row = document.createElement("tr");
-          if (isBigBuy) row.classList.add("highlight");
-          if (isHugeBuy) row.classList.add("highlight-big-red");
+
+          if (isHugeBuy) {
+            row.classList.add("highlight-big-red");
+          } else if (isBigBuy) {
+            row.classList.add("highlight");
+          }
 
           row.innerHTML = `
             <td class="asks">${parseFloat(ask[0]).toFixed(6)}</td>

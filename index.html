@@ -44,7 +44,7 @@
 
     h1 {
       text-align: center;
-      font-size: 18px; /* slightly smaller */
+      font-size: 18px;
       margin: 60px 0 15px;
     }
 
@@ -59,11 +59,11 @@
     }
 
     th, td {
-      padding: 8px 10px; /* reduced padding */
+      padding: 8px 10px;
       text-align: right;
       border-bottom: 1px solid #444;
       position: relative;
-      font-size: 13px; /* reduced font size */
+      font-size: 13px;
     }
 
     th {
@@ -84,13 +84,17 @@
     .bids { color: #5f5; }
 
     .highlight-blue td:nth-child(3),
-    .highlight-blue td:nth-child(4),
+    .highlight-blue td:nth-child(4) {
+      background-color: rgba(0, 123, 255, 0.15);
+      border: none;
+      padding: 8px 10px;
+    }
+
+    /* Updated red highlight for >=1000 with less transparency */
     .highlight-red td:nth-child(3),
     .highlight-red td:nth-child(4) {
-      background-color: rgba(0, 123, 255, 0.15);
-      /* Remove border */
+      background-color: rgba(255, 0, 0, 0.35); /* less translucent red */
       border: none;
-      /* Optional: reduce padding inside highlighted cells */
       padding: 8px 10px;
     }
 

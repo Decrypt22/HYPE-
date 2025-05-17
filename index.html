@@ -90,10 +90,10 @@
       padding: 8px 10px;
     }
 
-    /* Updated red highlight for >=1000 with less transparency */
+    /* Red highlight for >=1000 with slightly more translucency */
     .highlight-red td:nth-child(3),
     .highlight-red td:nth-child(4) {
-      background-color: rgba(255, 0, 0, 0.35); /* less translucent red */
+      background-color: rgba(255, 0, 0, 0.30);
       border: none;
       padding: 8px 10px;
     }
@@ -234,26 +234,4 @@
           tbody.appendChild(row);
         }
 
-        for (let [price] of previousBigBuys) {
-          if (!currentBigBuys.has(price) && soundEnabled) {
-            disappearSound.currentTime = 0;
-            disappearSound.play().catch(() => {});
-          }
-        }
-
-        previousBigBuys = currentBigBuys;
-      } catch (err) {
-        console.error("Order book error:", err);
-      }
-    }
-
-    async function refreshAll() {
-      await loadLivePrice();
-      await loadOrderBook();
-      setTimeout(refreshAll, 3000);
-    }
-
-    refreshAll();
-  </script>
-</body>
-</html>
+        for (let

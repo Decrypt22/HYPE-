@@ -3,26 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <title>HYPE/USDT Order Book</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body {
       background: #0e0e0e;
       color: #fff;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 10px;
+      padding: 20px;
       margin: 0;
     }
 
     #live-price {
       position: fixed;
-      top: 10px;
-      left: 10px;
-      font-size: 16px;
+      top: 20px;
+      left: 20px;
+      font-size: 20px;
       font-weight: 700;
       color: #5f5;
       background: rgba(0, 0, 0, 0.4);
-      padding: 6px 10px;
-      border-radius: 6px;
+      padding: 8px 12px;
+      border-radius: 8px;
       box-shadow: 0 0 10px #3a3;
       font-family: monospace;
       z-index: 1000;
@@ -30,12 +29,12 @@
 
     #toggle-sound {
       position: fixed;
-      top: 10px;
-      right: 10px;
+      top: 20px;
+      right: 20px;
       background: #333;
       color: #5f5;
       border: 2px solid #5f5;
-      padding: 6px 10px;
+      padding: 6px 12px;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
@@ -44,8 +43,8 @@
 
     h1 {
       text-align: center;
-      font-size: 18px;
-      margin: 60px 0 15px;
+      font-size: 24px;
+      margin-bottom: 20px;
     }
 
     table {
@@ -55,19 +54,17 @@
       border-radius: 12px;
       background: linear-gradient(145deg, #121212, #1c1c1c);
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 0 15px #222;
-      overflow-x: auto;
+    }
+
+    thead tr {
+      background: #222;
     }
 
     th, td {
-      padding: 8px 10px;
+      padding: 12px 15px;
       text-align: right;
       border-bottom: 1px solid #444;
       position: relative;
-      font-size: 13px;
-    }
-
-    th {
-      background: #222;
     }
 
     th:first-child, td:first-child {
@@ -86,16 +83,11 @@
     .highlight-blue td:nth-child(3),
     .highlight-blue td:nth-child(4) {
       background-color: rgba(0, 123, 255, 0.15);
-      border: none;
-      padding: 8px 10px;
     }
 
-    /* Updated red highlight for >=1000 with less transparency */
     .highlight-red td:nth-child(3),
     .highlight-red td:nth-child(4) {
-      background-color: rgba(255, 0, 0, 0.20); /* less translucent red */
-      border: none;
-      padding: 8px 10px;
+      background-color: rgba(255, 0, 0, 0.25);
     }
 
     .highlight-blue td:nth-child(3)::before,
@@ -122,21 +114,6 @@
         box-shadow: 0 0 14px #5f5;
       }
     }
-
-    .flash {
-      animation: flashRow 0.5s ease-out;
-    }
-
-    @keyframes flashRow {
-      from { background-color: rgba(255, 255, 255, 0.05); }
-      to { background-color: transparent; }
-    }
-
-    @media (max-width: 600px) {
-      h1 { font-size: 16px; }
-      #live-price, #toggle-sound { font-size: 12px; padding: 5px 8px; }
-      th, td { padding: 6px 8px; font-size: 12px; }
-    }
   </style>
 </head>
 <body>
@@ -146,8 +123,14 @@
 
   <table>
     <thead>
-      <tr><th colspan="2">Asks</th><th colspan="2">Bids</th></tr>
-      <tr><th>Price</th><th>Qty</th><th>Price</th><th>Qty</th></tr>
+      <tr>
+        <th colspan="2">Asks</th>
+        <th colspan="2">Bids</th>
+      </tr>
+      <tr>
+        <th>Price</th><th>Qty</th>
+        <th>Price</th><th>Qty</th>
+      </tr>
     </thead>
     <tbody id="orderbook"></tbody>
   </table>
@@ -164,22 +147,26 @@
     const disappearSound = document.getElementById("disappear-sound");
     appearSound.volume = 1.0;
     disappearSound.volume = 1.0;
+
     let soundEnabled = false;
 
-    document.getElementById("toggle-sound").onclick = () => {
+    const soundButton = document.getElementById("toggle-sound");
+    soundButton.addEventListener("click", () => {
       soundEnabled = !soundEnabled;
       if (soundEnabled) {
         appearSound.play().then(() => {
-          appearSound.pause(); appearSound.currentTime = 0;
+          appearSound.pause();
+          appearSound.currentTime = 0;
         });
         disappearSound.play().then(() => {
-          disappearSound.pause(); disappearSound.currentTime = 0;
+          disappearSound.pause();
+          disappearSound.currentTime = 0;
         });
-        document.getElementById("toggle-sound").textContent = "Disable Sound";
+        soundButton.textContent = "Disable Sound";
       } else {
-        document.getElementById("toggle-sound").textContent = "Enable Sound";
+        soundButton.textContent = "Enable Sound";
       }
-    };
+    });
 
     let previousBigBuys = new Map();
 
@@ -187,7 +174,8 @@
       try {
         const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/ticker/price?symbol=HYPEUSDT");
         const data = await res.json();
-        document.getElementById("live-price").textContent = `HYPE/USDT: ${parseFloat(data.price).toFixed(6)}`;
+        const price = parseFloat(data.price).toFixed(6);
+        document.getElementById("live-price").textContent = `HYPE/USDT: ${price}`;
       } catch {
         document.getElementById("live-price").textContent = "Error loading price";
       }
@@ -197,20 +185,27 @@
       try {
         const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=50");
         const data = await res.json();
+        const asks = data.asks;
+        const bids = data.bids;
         const tbody = document.getElementById("orderbook");
         tbody.innerHTML = "";
-        const max = Math.max(data.asks.length, data.bids.length);
+
+        const max = Math.max(asks.length, bids.length);
         const currentBigBuys = new Map();
 
         for (let i = 0; i < max; i++) {
-          const ask = data.asks[i] || ["", ""];
-          const bid = data.bids[i] || ["", ""];
+          const ask = asks[i] || ["", ""];
+          const bid = bids[i] || ["", ""];
           const bidQty = parseFloat(bid[1]);
-          const bidPrice = parseFloat(bid[0]).toFixed(6);
-          const isBlue = bidQty >= 100 && bidQty < 1000;
-          const isRed = bidQty >= 1000;
 
-          if (isBlue || isRed) {
+          // Skip showing bids that are <= 10
+          if (bidQty <= 10) continue;
+
+          const bidPrice = parseFloat(bid[0]).toFixed(6);
+          const isBigBuy = bidQty >= 100;
+          const isHugeBuy = bidQty >= 1000;
+
+          if (isBigBuy) {
             currentBigBuys.set(bidPrice, bidQty);
             if (!previousBigBuys.has(bidPrice) && soundEnabled) {
               appearSound.currentTime = 0;
@@ -219,10 +214,11 @@
           }
 
           const row = document.createElement("tr");
-          if (isBlue) row.classList.add("highlight-blue");
-          if (isRed) row.classList.add("highlight-red");
-          if (!previousBigBuys.has(bidPrice) && (isBlue || isRed)) {
-            row.classList.add("flash");
+
+          if (isHugeBuy) {
+            row.classList.add("highlight-red");
+          } else if (isBigBuy) {
+            row.classList.add("highlight-blue");
           }
 
           row.innerHTML = `
@@ -243,7 +239,7 @@
 
         previousBigBuys = currentBigBuys;
       } catch (err) {
-        console.error("Order book error:", err);
+        console.error("Error loading order book:", err);
       }
     }
 

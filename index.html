@@ -83,16 +83,19 @@
     .asks { color: #f55; }
     .bids { color: #5f5; }
 
+    /* Highlight blue for buy orders >= 100 and < 1000 */
     .highlight-blue td:nth-child(3),
     .highlight-blue td:nth-child(4) {
       background-color: rgba(0, 123, 255, 0.15);
     }
 
+    /* Highlight red for buy orders >= 1000 */
     .highlight-red td:nth-child(3),
     .highlight-red td:nth-child(4) {
       background-color: rgba(255, 0, 0, 0.25);
     }
 
+    /* Green dot for highlighted buy orders */
     .highlight-blue td:nth-child(3)::before,
     .highlight-red td:nth-child(3)::before {
       content: "";
@@ -148,10 +151,10 @@
   </table>
 
   <audio id="appear-sound" preload="auto">
-    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
+    <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg" />
   </audio>
   <audio id="disappear-sound" preload="auto">
-    <source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" type="audio/ogg">
+    <source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" type="audio/ogg" />
   </audio>
 
   <script>
@@ -165,10 +168,12 @@
       soundEnabled = !soundEnabled;
       if (soundEnabled) {
         appearSound.play().then(() => {
-          appearSound.pause(); appearSound.currentTime = 0;
+          appearSound.pause();
+          appearSound.currentTime = 0;
         });
         disappearSound.play().then(() => {
-          disappearSound.pause(); disappearSound.currentTime = 0;
+          disappearSound.pause();
+          disappearSound.currentTime = 0;
         });
         document.getElementById("toggle-sound").textContent = "Disable Sound";
       } else {
@@ -194,38 +199,53 @@
         const data = await res.json();
         const tbody = document.getElementById("orderbook");
         tbody.innerHTML = "";
+
         const max = Math.max(data.asks.length, data.bids.length);
         const currentBigBuys = new Map();
 
         for (let i = 0; i < max; i++) {
           const ask = data.asks[i] || ["", ""];
           const bid = data.bids[i] || ["", ""];
+
+          const askPrice = parseFloat(ask[0]);
+          const askQty = parseFloat(ask[1]);
+
+          const bidPrice = parseFloat(bid[0]);
           const bidQty = parseFloat(bid[1]);
-          const bidPrice = parseFloat(bid[0]).toFixed(6);
-          const isBlue = bidQty > 6 && bidQty < 1000;
-          const isRed = bidQty >= 1000;
 
-          if (!(isBlue || isRed)) continue;
+          // Exclude buy orders with qty <= 6
+          if (bidQty <= 6) continue;
 
-          currentBigBuys.set(bidPrice, bidQty);
-          if (!previousBigBuys.has(bidPrice) && soundEnabled) {
-            appearSound.currentTime = 0;
-            appearSound.play().catch(() => {});
+          // Determine highlight class
+          let highlightClass = "";
+          if (bidQty >= 1000) {
+            highlightClass = "highlight-red";
+          } else if (bidQty >= 100) {
+            highlightClass = "highlight-blue";
+          }
+
+          // Track current big buys for sound and flash
+          if (highlightClass) {
+            currentBigBuys.set(bidPrice.toFixed(6), bidQty);
+            if (!previousBigBuys.has(bidPrice.toFixed(6)) && soundEnabled) {
+              appearSound.currentTime = 0;
+              appearSound.play().catch(() => {});
+            }
           }
 
           const row = document.createElement("tr");
-          if (isBlue) row.classList.add("highlight-blue");
-          if (isRed) row.classList.add("highlight-red");
-          if (!previousBigBuys.has(bidPrice)) {
+          if (highlightClass) row.classList.add(highlightClass);
+          if (!previousBigBuys.has(bidPrice.toFixed(6)) && highlightClass) {
             row.classList.add("flash");
           }
 
           row.innerHTML = `
-            <td class="asks">${parseFloat(ask[0]).toFixed(6)}</td>
-            <td class="asks">${parseFloat(ask[1]).toFixed(2)}</td>
-            <td class="bids">${bidPrice}</td>
+            <td class="asks">${isNaN(askPrice) ? "" : askPrice.toFixed(6)}</td>
+            <td class="asks">${isNaN(askQty) ? "" : askQty.toFixed(2)}</td>
+            <td class="bids">${bidPrice.toFixed(6)}</td>
             <td class="bids">${bidQty.toFixed(2)}</td>
           `;
+
           tbody.appendChild(row);
         }
 

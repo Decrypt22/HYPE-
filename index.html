@@ -86,13 +86,11 @@
     .highlight-blue td:nth-child(3),
     .highlight-blue td:nth-child(4) {
       background-color: rgba(0, 123, 255, 0.15);
-      border: 1px solid #5f5;
     }
 
     .highlight-red td:nth-child(3),
     .highlight-red td:nth-child(4) {
       background-color: rgba(255, 0, 0, 0.25);
-      border: 1px solid #5f5;
     }
 
     .highlight-blue td:nth-child(3)::before,
@@ -204,25 +202,21 @@
           const bid = data.bids[i] || ["", ""];
           const bidQty = parseFloat(bid[1]);
           const bidPrice = parseFloat(bid[0]).toFixed(6);
-
-          // Filter: exclude bid quantities of 6 or less
-          if (bidQty <= 6) continue;
-
-          const isBlue = bidQty >= 100 && bidQty < 1000;
+          const isBlue = bidQty > 6 && bidQty < 1000;
           const isRed = bidQty >= 1000;
 
-          if (isBlue || isRed) {
-            currentBigBuys.set(bidPrice, bidQty);
-            if (!previousBigBuys.has(bidPrice) && soundEnabled) {
-              appearSound.currentTime = 0;
-              appearSound.play().catch(() => {});
-            }
+          if (!(isBlue || isRed)) continue;
+
+          currentBigBuys.set(bidPrice, bidQty);
+          if (!previousBigBuys.has(bidPrice) && soundEnabled) {
+            appearSound.currentTime = 0;
+            appearSound.play().catch(() => {});
           }
 
           const row = document.createElement("tr");
           if (isBlue) row.classList.add("highlight-blue");
           if (isRed) row.classList.add("highlight-red");
-          if (!previousBigBuys.has(bidPrice) && (isBlue || isRed)) {
+          if (!previousBigBuys.has(bidPrice)) {
             row.classList.add("flash");
           }
 

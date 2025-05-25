@@ -80,18 +80,18 @@
     .asks { color: #f55; }
     .bids { color: #5f5; }
 
-    .highlight-blue td:nth-child(3),
-    .highlight-blue td:nth-child(4) {
+    .highlight-buy td:nth-child(3),
+    .highlight-buy td:nth-child(4) {
       background-color: rgba(0, 123, 255, 0.15);
     }
 
-    .highlight-red td:nth-child(3),
-    .highlight-red td:nth-child(4) {
-      background-color: rgba(255, 0, 0, 0.25);
+    .highlight-sell td:nth-child(1),
+    .highlight-sell td:nth-child(2) {
+      background-color: rgba(255, 0, 0, 0.18);
     }
 
-    .highlight-blue td:nth-child(3)::before,
-    .highlight-red td:nth-child(3)::before {
+    .highlight-buy td:nth-child(3)::before,
+    .highlight-sell td:nth-child(1)::before {
       content: "";
       position: absolute;
       left: 8px;
@@ -183,7 +183,7 @@
 
     async function loadOrderBook() {
       try {
-        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=300");
+        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=200");
         const data = await res.json();
         const asks = data.asks;
         const bids = data.bids;
@@ -196,13 +196,14 @@
         for (let i = 0; i < max; i++) {
           const ask = asks[i] || ["", ""];
           const bid = bids[i] || ["", ""];
+
+          const askQty = parseFloat(ask[1]);
+          const askPrice = parseFloat(ask[0]).toFixed(6);
+          const isBigSell = askQty >= 1000;
+
           const bidQty = parseFloat(bid[1]);
           const bidPrice = parseFloat(bid[0]).toFixed(6);
-
-          if (bidQty <= 10) continue;
-
-          const isBigBuy = bidQty >= 100;
-          const isVeryBigBuy = bidQty >= 1000;
+          const isBigBuy = bidQty >= 1000;
 
           if (isBigBuy) {
             currentBigBuys.set(bidPrice, bidQty);
@@ -212,17 +213,19 @@
             }
           }
 
-          const row = document.createElement("tr");
-          if (isVeryBigBuy) row.classList.add("highlight-red");
-          else if (isBigBuy) row.classList.add("highlight-blue");
+          if (bidQty > 10) {
+            const row = document.createElement("tr");
+            if (isBigBuy) row.classList.add("highlight-buy");
+            if (isBigSell) row.classList.add("highlight-sell");
 
-          row.innerHTML = `
-            <td class="asks">${parseFloat(ask[0]).toFixed(6)}</td>
-            <td class="asks">${parseFloat(ask[1]).toFixed(2)}</td>
-            <td class="bids">${bidPrice}</td>
-            <td class="bids">${bidQty.toFixed(2)}</td>
-          `;
-          tbody.appendChild(row);
+            row.innerHTML = `
+              <td class="asks">${askPrice}</td>
+              <td class="asks">${askQty.toFixed(2)}</td>
+              <td class="bids">${bidPrice}</td>
+              <td class="bids">${bidQty.toFixed(2)}</td>
+            `;
+            tbody.appendChild(row);
+          }
         }
 
         for (let [price] of previousBigBuys) {

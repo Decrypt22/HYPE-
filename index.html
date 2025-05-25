@@ -1,5 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
+<!DOCTYPE html><html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>HYPE/USDT Order Book</title>
@@ -10,118 +9,123 @@
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       padding: 20px;
       margin: 0;
-    }
+    }#live-price {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #5f5;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 8px 12px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px #3a3;
+  font-family: monospace;
+  z-index: 1000;
+}
 
-    #live-price {
-      position: fixed;
-      top: 20px;
-      left: 20px;
-      font-size: 20px;
-      font-weight: 700;
-      color: #5f5;
-      background: rgba(0, 0, 0, 0.4);
-      padding: 8px 12px;
-      border-radius: 8px;
-      box-shadow: 0 0 10px #3a3;
-      font-family: monospace;
-      z-index: 1000;
-    }
+#toggle-sound {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: #333;
+  color: #5f5;
+  border: 2px solid #5f5;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  z-index: 1000;
+}
 
-    #toggle-sound {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      background: #333;
-      color: #5f5;
-      border: 2px solid #5f5;
-      padding: 6px 12px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      z-index: 1000;
-    }
+h1 {
+  text-align: center;
+  font-size: 24px;
+  margin-bottom: 20px;
+}
 
-    h1 {
-      text-align: center;
-      font-size: 24px;
-      margin-bottom: 20px;
-    }
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #121212, #1c1c1c);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 0 15px #222;
+}
 
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0;
-      border-radius: 12px;
-      background: linear-gradient(145deg, #121212, #1c1c1c);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 0 15px #222;
-    }
+thead tr {
+  background: #222;
+}
 
-    thead tr {
-      background: #222;
-    }
+th, td {
+  padding: 12px 15px;
+  text-align: right;
+  border-bottom: 1px solid #444;
+  position: relative;
+}
 
-    th, td {
-      padding: 12px 15px;
-      text-align: right;
-      border-bottom: 1px solid #444;
-      position: relative;
-    }
+th:first-child, td:first-child {
+  border-top-left-radius: 12px;
+  border-bottom-left-radius: 12px;
+}
 
-    th:first-child, td:first-child {
-      border-top-left-radius: 12px;
-      border-bottom-left-radius: 12px;
-    }
+th:last-child, td:last-child {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
 
-    th:last-child, td:last-child {
-      border-top-right-radius: 12px;
-      border-bottom-right-radius: 12px;
-    }
+.asks { color: #f55; }
+.bids { color: #5f5; }
 
-    .asks { color: #f55; }
-    .bids { color: #5f5; }
+.highlight-100 td:nth-child(3),
+.highlight-100 td:nth-child(4) {
+  background-color: rgba(0, 123, 255, 0.15);
+}
+.highlight-1000 td:nth-child(3),
+.highlight-1000 td:nth-child(4) {
+  background-color: rgba(0, 123, 255, 0.35);
+}
 
-    .highlight-buy td:nth-child(3),
-    .highlight-buy td:nth-child(4) {
-      background-color: rgba(0, 123, 255, 0.15);
-    }
+.highlight-sell-100 td:nth-child(1),
+.highlight-sell-100 td:nth-child(2) {
+  background-color: rgba(255, 0, 0, 0.12);
+}
+.highlight-sell-1000 td:nth-child(1),
+.highlight-sell-1000 td:nth-child(2) {
+  background-color: rgba(255, 0, 0, 0.3);
+}
 
-    .highlight-sell td:nth-child(1),
-    .highlight-sell td:nth-child(2) {
-      background-color: rgba(255, 0, 0, 0.18);
-    }
+.highlight-1000 td:nth-child(3)::before,
+.highlight-sell-1000 td:nth-child(1)::before {
+  content: "";
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  background-color: #5f5;
+  border-radius: 50%;
+  animation: glowPulse 2.5s ease-in-out infinite;
+}
 
-    .highlight-buy td:nth-child(3)::before,
-    .highlight-sell td:nth-child(1)::before {
-      content: "";
-      position: absolute;
-      left: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 8px;
-      height: 8px;
-      background-color: #5f5;
-      border-radius: 50%;
-      animation: glowPulse 2.5s ease-in-out infinite;
-    }
+@keyframes glowPulse {
+  0%, 100% {
+    opacity: 0.2;
+    box-shadow: 0 0 5px #5f5;
+  }
+  50% {
+    opacity: 1;
+    box-shadow: 0 0 14px #5f5;
+  }
+}
 
-    @keyframes glowPulse {
-      0%, 100% {
-        opacity: 0.2;
-        box-shadow: 0 0 5px #5f5;
-      }
-      50% {
-        opacity: 1;
-        box-shadow: 0 0 14px #5f5;
-      }
-    }
   </style>
 </head>
 <body>
   <div id="live-price">Loading price...</div>
   <button id="toggle-sound">Enable Sound</button>
-  <h1>HYPE/USDT Order Book (Live)</h1>
-
-  <table>
+  <h1>HYPE/USDT Order Book (Live)</h1>  <table>
     <thead>
       <tr>
         <th colspan="2">Asks</th>
@@ -133,23 +137,18 @@
       </tr>
     </thead>
     <tbody id="orderbook"></tbody>
-  </table>
-
-  <audio id="appear-sound" preload="auto">
+  </table>  <audio id="appear-sound" preload="auto">
     <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg">
   </audio>
   <audio id="disappear-sound" preload="auto">
     <source src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg" type="audio/ogg">
-  </audio>
-
-  <script>
+  </audio>  <script>
     const appearSound = document.getElementById("appear-sound");
     const disappearSound = document.getElementById("disappear-sound");
     appearSound.volume = 1.0;
     disappearSound.volume = 1.0;
 
     let soundEnabled = false;
-
     const soundButton = document.getElementById("toggle-sound");
     soundButton.addEventListener("click", () => {
       soundEnabled = !soundEnabled;
@@ -186,7 +185,7 @@
         const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=200");
         const data = await res.json();
         const asks = data.asks;
-        const bids = data.bids;
+        const bids = data.bids.filter(b => parseFloat(b[1]) > 10);
         const tbody = document.getElementById("orderbook");
         tbody.innerHTML = "";
 
@@ -196,36 +195,38 @@
         for (let i = 0; i < max; i++) {
           const ask = asks[i] || ["", ""];
           const bid = bids[i] || ["", ""];
-
           const askQty = parseFloat(ask[1]);
           const askPrice = parseFloat(ask[0]).toFixed(6);
-          const isBigSell = askQty >= 1000;
-
           const bidQty = parseFloat(bid[1]);
           const bidPrice = parseFloat(bid[0]).toFixed(6);
-          const isBigBuy = bidQty >= 1000;
 
-          if (isBigBuy) {
+          const row = document.createElement("tr");
+
+          if (bidQty >= 1000) {
+            row.classList.add("highlight-1000");
             currentBigBuys.set(bidPrice, bidQty);
             if (!previousBigBuys.has(bidPrice) && soundEnabled) {
               appearSound.currentTime = 0;
               appearSound.play().catch(() => {});
             }
+          } else if (bidQty >= 100) {
+            row.classList.add("highlight-100");
           }
 
-          if (bidQty > 10) {
-            const row = document.createElement("tr");
-            if (isBigBuy) row.classList.add("highlight-buy");
-            if (isBigSell) row.classList.add("highlight-sell");
-
-            row.innerHTML = `
-              <td class="asks">${askPrice}</td>
-              <td class="asks">${askQty.toFixed(2)}</td>
-              <td class="bids">${bidPrice}</td>
-              <td class="bids">${bidQty.toFixed(2)}</td>
-            `;
-            tbody.appendChild(row);
+          if (askQty >= 1000) {
+            row.classList.add("highlight-sell-1000");
+          } else if (askQty >= 100) {
+            row.classList.add("highlight-sell-100");
           }
+
+          row.innerHTML = `
+            <td class="asks">${askPrice}</td>
+            <td class="asks">${askQty.toFixed(2)}</td>
+            <td class="bids">${bidPrice}</td>
+            <td class="bids">${bidQty.toFixed(2)}</td>
+          `;
+
+          tbody.appendChild(row);
         }
 
         for (let [price] of previousBigBuys) {
@@ -248,6 +249,5 @@
     }
 
     refreshAll();
-  </script>
-</body>
+  </script></body>
 </html>

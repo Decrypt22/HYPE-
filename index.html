@@ -150,7 +150,8 @@
 
     let soundEnabled = false;
 
-    document.getElementById("toggle-sound").addEventListener("click", () => {
+    const soundButton = document.getElementById("toggle-sound");
+    soundButton.addEventListener("click", () => {
       soundEnabled = !soundEnabled;
       if (soundEnabled) {
         appearSound.play().then(() => {
@@ -161,9 +162,9 @@
           disappearSound.pause();
           disappearSound.currentTime = 0;
         });
-        event.target.textContent = "Disable Sound";
+        soundButton.textContent = "Disable Sound";
       } else {
-        event.target.textContent = "Enable Sound";
+        soundButton.textContent = "Enable Sound";
       }
     });
 
@@ -182,7 +183,7 @@
 
     async function loadOrderBook() {
       try {
-        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=1000");
+        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=100");
         const data = await res.json();
         const asks = data.asks;
         const bids = data.bids;
@@ -196,12 +197,12 @@
           const ask = asks[i] || ["", ""];
           const bid = bids[i] || ["", ""];
           const bidQty = parseFloat(bid[1]);
+          const bidPrice = parseFloat(bid[0]).toFixed(6);
 
           if (bidQty <= 10) continue;
 
-          const bidPrice = parseFloat(bid[0]).toFixed(6);
           const isBigBuy = bidQty >= 100;
-          const isHugeBuy = bidQty >= 1000;
+          const isVeryBigBuy = bidQty >= 1000;
 
           if (isBigBuy) {
             currentBigBuys.set(bidPrice, bidQty);
@@ -212,12 +213,8 @@
           }
 
           const row = document.createElement("tr");
-
-          if (isHugeBuy) {
-            row.classList.add("highlight-red");
-          } else if (isBigBuy) {
-            row.classList.add("highlight-blue");
-          }
+          if (isVeryBigBuy) row.classList.add("highlight-red");
+          else if (isBigBuy) row.classList.add("highlight-blue");
 
           row.innerHTML = `
             <td class="asks">${parseFloat(ask[0]).toFixed(6)}</td>

@@ -150,8 +150,7 @@
 
     let soundEnabled = false;
 
-    const soundButton = document.getElementById("toggle-sound");
-    soundButton.addEventListener("click", () => {
+    document.getElementById("toggle-sound").addEventListener("click", () => {
       soundEnabled = !soundEnabled;
       if (soundEnabled) {
         appearSound.play().then(() => {
@@ -162,9 +161,9 @@
           disappearSound.pause();
           disappearSound.currentTime = 0;
         });
-        soundButton.textContent = "Disable Sound";
+        event.target.textContent = "Disable Sound";
       } else {
-        soundButton.textContent = "Enable Sound";
+        event.target.textContent = "Enable Sound";
       }
     });
 
@@ -183,7 +182,7 @@
 
     async function loadOrderBook() {
       try {
-        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=50");
+        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=1000");
         const data = await res.json();
         const asks = data.asks;
         const bids = data.bids;
@@ -198,7 +197,6 @@
           const bid = bids[i] || ["", ""];
           const bidQty = parseFloat(bid[1]);
 
-          // Skip showing bids that are <= 10
           if (bidQty <= 10) continue;
 
           const bidPrice = parseFloat(bid[0]).toFixed(6);

@@ -204,6 +204,10 @@
           const bid = data.bids[i] || ["", ""];
           const bidQty = parseFloat(bid[1]);
           const bidPrice = parseFloat(bid[0]).toFixed(6);
+
+          // Filter: exclude bid quantities of 6 or less
+          if (bidQty <= 6) continue;
+
           const isBlue = bidQty >= 100 && bidQty < 1000;
           const isRed = bidQty >= 1000;
 

@@ -192,7 +192,7 @@
 
     async function loadOrderBook() {
       try {
-        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=50");
+        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=150");
         const data = await res.json();
         const tbody = document.getElementById("orderbook");
         tbody.innerHTML = "";

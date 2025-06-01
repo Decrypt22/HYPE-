@@ -83,16 +83,19 @@
     .asks { color: #f55; }
     .bids { color: #5f5; }
 
+    /* Highlight blue for buy orders >= 100 and < 1000 */
     .highlight-blue td:nth-child(3),
     .highlight-blue td:nth-child(4) {
       background-color: rgba(0, 123, 255, 0.15);
     }
 
+    /* Highlight red for buy orders >= 1000 */
     .highlight-red td:nth-child(3),
     .highlight-red td:nth-child(4) {
       background-color: rgba(255, 0, 0, 0.25);
     }
 
+    /* Green dot for highlighted buy orders */
     .highlight-blue td:nth-child(3)::before,
     .highlight-red td:nth-child(3)::before {
       content: "";
@@ -179,10 +182,11 @@
     };
 
     let previousBigBuys = new Map();
-
+    
+    // Updated with your Cloudflare Worker URL for live price
     async function loadLivePrice() {
       try {
-        const res = await fetch("https://api.allorigins.win/raw?url=https://api.mexc.com/api/v3/ticker/price?symbol=HYPEUSDT");
+        const res = await fetch("https://cold-dream-0b0a.availablenot542.workers.dev/?url=https://api.mexc.com/api/v3/ticker/price?symbol=HYPEUSDT");
         const data = await res.json();
         document.getElementById("live-price").textContent = `HYPE/USDT: ${parseFloat(data.price).toFixed(6)}`;
       } catch {
@@ -190,9 +194,10 @@
       }
     }
 
+    // Updated with your Cloudflare Worker URL for order book
     async function loadOrderBook() {
       try {
-        const res = await fetch("https://api.allorigins.win/raw?url=https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=150");
+        const res = await fetch("https://cold-dream-0b0a.availablenot542.workers.dev/?url=https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=150");
         const data = await res.json();
         const tbody = document.getElementById("orderbook");
         tbody.innerHTML = "";
@@ -210,8 +215,10 @@
           const bidPrice = parseFloat(bid[0]);
           const bidQty = parseFloat(bid[1]);
 
+          // Exclude buy orders with qty <= 6
           if (bidQty <= 6) continue;
 
+          // Determine highlight class
           let highlightClass = "";
           if (bidQty >= 1000) {
             highlightClass = "highlight-red";
@@ -219,6 +226,7 @@
             highlightClass = "highlight-blue";
           }
 
+          // Track current big buys for sound and flash
           if (highlightClass) {
             currentBigBuys.set(bidPrice.toFixed(6), bidQty);
             if (!previousBigBuys.has(bidPrice.toFixed(6)) && soundEnabled) {

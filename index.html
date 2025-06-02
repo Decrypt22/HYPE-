@@ -12,7 +12,6 @@
       padding: 10px;
       margin: 0;
     }
-
     #live-price {
       position: fixed;
       top: 10px;
@@ -27,7 +26,6 @@
       font-family: monospace;
       z-index: 1000;
     }
-
     #toggle-sound {
       position: fixed;
       top: 10px;
@@ -41,13 +39,11 @@
       cursor: pointer;
       z-index: 1000;
     }
-
     h1 {
       text-align: center;
       font-size: 20px;
       margin: 60px 0 15px;
     }
-
     table {
       width: 100%;
       border-collapse: separate;
@@ -57,7 +53,6 @@
       box-shadow: 0 8px 16px rgba(0, 0, 0, 0.7), 0 4px 12px rgba(0, 0, 0, 0.5), inset 0 0 15px #222;
       overflow-x: auto;
     }
-
     th, td {
       padding: 10px 12px;
       text-align: right;
@@ -65,34 +60,30 @@
       position: relative;
       font-size: 14px;
     }
-
     th {
       background: #222;
     }
-
     th:first-child, td:first-child {
       border-top-left-radius: 12px;
       border-bottom-left-radius: 12px;
     }
-
     th:last-child, td:last-child {
       border-top-right-radius: 12px;
       border-bottom-right-radius: 12px;
     }
-
     .asks { color: #f55; }
     .bids { color: #5f5; }
 
     .highlight-blue td:nth-child(3),
-    .highlight-blue td:nth-child(4) {
+    .highlight-blue td:nth-child(4),
+    .highlight-red td:nth-child(3),
+    .highlight-red td:nth-child(4) {
       background-color: rgba(0, 123, 255, 0.15);
     }
-
     .highlight-red td:nth-child(3),
     .highlight-red td:nth-child(4) {
       background-color: rgba(255, 0, 0, 0.25);
     }
-
     .highlight-blue td:nth-child(3)::before,
     .highlight-red td:nth-child(3)::before {
       content: "";
@@ -106,7 +97,6 @@
       border-radius: 50%;
       animation: glowPulse 2.5s ease-in-out infinite;
     }
-
     @keyframes glowPulse {
       0%, 100% {
         opacity: 0.2;
@@ -117,16 +107,13 @@
         box-shadow: 0 0 14px #5f5;
       }
     }
-
     .flash {
       animation: flashRow 0.5s ease-out;
     }
-
     @keyframes flashRow {
       from { background-color: rgba(255, 255, 255, 0.05); }
       to { background-color: transparent; }
     }
-
     @media (max-width: 600px) {
       h1 { font-size: 18px; }
       #live-price, #toggle-sound { font-size: 12px; padding: 5px 8px; }
@@ -145,7 +132,6 @@
     </thead>
     <tbody id="orderbook"></tbody>
   </table>
-
   <audio id="appear-sound" preload="auto">
     <source src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" type="audio/ogg" />
   </audio>
@@ -181,7 +167,7 @@
 
     async function loadLivePrice() {
       try {
-        const res = await fetch("https://api.allorigins.win/raw?url=https://api.mexc.com/api/v3/ticker/price?symbol=HYPEUSDT");
+        const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/ticker/price?symbol=HYPEUSDT");
         const data = await res.json();
         document.getElementById("live-price").textContent = `HYPE/USDT: ${parseFloat(data.price).toFixed(6)}`;
       } catch {
@@ -189,79 +175,95 @@
       }
     }
 
-    async function loadOrderBook() {
-      try {
-        const res = await fetch("https://api.allorigins.win/raw?url=https://api.mexc.com/api/v3/depth?symbol=HYPEUSDT&limit=150");
-        const data = await res.json();
-        const tbody = document.getElementById("orderbook");
-        tbody.innerHTML = "";
+    function renderOrderBook(data) {
+      const tbody = document.getElementById("orderbook");
+      tbody.innerHTML = "";
+      const max = Math.max(data.asks.length, data.bids.length);
+      const currentBigBuys = new Map();
 
-        const max = Math.max(data.asks.length, data.bids.length);
-        const currentBigBuys = new Map();
+      for (let i = 0; i < max; i++) {
+        const ask = data.asks[i] || ["", ""];
+        const bid = data.bids[i] || ["", ""];
 
-        for (let i = 0; i < max; i++) {
-          const ask = data.asks[i] || ["", ""];
-          const bid = data.bids[i] || ["", ""];
+        const askPrice = parseFloat(ask[0]);
+        const askQty = parseFloat(ask[1]);
 
-          const askPrice = parseFloat(ask[0]);
-          const askQty = parseFloat(ask[1]);
+        const bidPrice = parseFloat(bid[0]);
+        const bidQty = parseFloat(bid[1]);
 
-          const bidPrice = parseFloat(bid[0]);
-          const bidQty = parseFloat(bid[1]);
+        if (bidQty <= 6) continue;
 
-          if (bidQty <= 6) continue;
-
-          let highlightClass = "";
-          if (bidQty >= 1000) {
-            highlightClass = "highlight-red";
-          } else if (bidQty >= 100) {
-            highlightClass = "highlight-blue";
-          }
-
-          if (highlightClass) {
-            currentBigBuys.set(bidPrice.toFixed(6), bidQty);
-            if (!previousBigBuys.has(bidPrice.toFixed(6)) && soundEnabled) {
-              appearSound.currentTime = 0;
-              appearSound.play().catch(() => {});
-            }
-          }
-
-          const row = document.createElement("tr");
-          if (highlightClass) row.classList.add(highlightClass);
-          if (!previousBigBuys.has(bidPrice.toFixed(6)) && highlightClass) {
-            row.classList.add("flash");
-          }
-
-          row.innerHTML = `
-            <td class="asks">${isNaN(askPrice) ? "" : askPrice.toFixed(6)}</td>
-            <td class="asks">${isNaN(askQty) ? "" : askQty.toFixed(2)}</td>
-            <td class="bids">${bidPrice.toFixed(6)}</td>
-            <td class="bids">${bidQty.toFixed(2)}</td>
-          `;
-
-          tbody.appendChild(row);
+        let highlightClass = "";
+        if (bidQty >= 1000) {
+          highlightClass = "highlight-red";
+        } else if (bidQty >= 100) {
+          highlightClass = "highlight-blue";
         }
 
-        for (let [price] of previousBigBuys) {
-          if (!currentBigBuys.has(price) && soundEnabled) {
-            disappearSound.currentTime = 0;
-            disappearSound.play().catch(() => {});
+        if (highlightClass) {
+          currentBigBuys.set(bidPrice.toFixed(6), bidQty);
+          if (!previousBigBuys.has(bidPrice.toFixed(6)) && soundEnabled) {
+            appearSound.currentTime = 0;
+            appearSound.play().catch(() => {});
           }
         }
 
-        previousBigBuys = currentBigBuys;
-      } catch (err) {
-        console.error("Order book error:", err);
+        const row = document.createElement("tr");
+        if (highlightClass) row.classList.add(highlightClass);
+        if (!previousBigBuys.has(bidPrice.toFixed(6)) && highlightClass) {
+          row.classList.add("flash");
+        }
+
+        row.innerHTML = `
+          <td class="asks">${isNaN(askPrice) ? "" : askPrice.toFixed(6)}</td>
+          <td class="asks">${isNaN(askQty) ? "" : askQty.toFixed(2)}</td>
+          <td class="bids">${bidPrice.toFixed(6)}</td>
+          <td class="bids">${bidQty.toFixed(2)}</td>
+        `;
+
+        tbody.appendChild(row);
       }
+
+      for (let [price] of previousBigBuys) {
+        if (!currentBigBuys.has(price) && soundEnabled) {
+          disappearSound.currentTime = 0;
+          disappearSound.play().catch(() => {});
+        }
+      }
+
+      previousBigBuys = currentBigBuys;
     }
 
-    function refreshAll() {
-      loadLivePrice();
-      loadOrderBook();
+    function connectWebSocket() {
+      const ws = new WebSocket("wss://wbs.mexc.com/ws");
+
+      ws.onopen = () => {
+        ws.send(JSON.stringify({
+          method: "SUBSCRIPTION",
+          params: [`spot@public.deals.v3.api@HYPEUSDT`],
+          id: Date.now()
+        }));
+        ws.send(JSON.stringify({
+          method: "SUBSCRIPTION",
+          params: [`spot@public.increase.depth.v3.api@HYPEUSDT`],
+          id: Date.now() + 1
+        }));
+      };
+
+      ws.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.d && data.d.asks && data.d.bids) {
+          renderOrderBook(data.d);
+        }
+      };
+
+      ws.onerror = () => console.error("WebSocket error");
+      ws.onclose = () => setTimeout(connectWebSocket, 2000); // Auto-reconnect
     }
 
-    refreshAll(); // First run
-    setInterval(refreshAll, 3000); // Repeat every 3 seconds
+    loadLivePrice();
+    setInterval(loadLivePrice, 5000);
+    connectWebSocket();
   </script>
 </body>
 </html>

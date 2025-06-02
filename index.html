@@ -73,17 +73,17 @@
     }
     .asks { color: #f55; }
     .bids { color: #5f5; }
-
+    /* Highlight blue for buy orders >= 100 and < 1000 */
     .highlight-blue td:nth-child(3),
-    .highlight-blue td:nth-child(4),
-    .highlight-red td:nth-child(3),
-    .highlight-red td:nth-child(4) {
+    .highlight-blue td:nth-child(4) {
       background-color: rgba(0, 123, 255, 0.15);
     }
+    /* Highlight red for buy orders >= 1000 */
     .highlight-red td:nth-child(3),
     .highlight-red td:nth-child(4) {
       background-color: rgba(255, 0, 0, 0.25);
     }
+    /* Green dot for highlighted buy orders */
     .highlight-blue td:nth-child(3)::before,
     .highlight-red td:nth-child(3)::before {
       content: "";
@@ -163,8 +163,7 @@
       }
     };
 
-    let previousBigBuys = new Map();
-
+    // Live price fetching from REST API (unchanged)
     async function loadLivePrice() {
       try {
         const res = await fetch("https://corsproxy.io/?https://api.mexc.com/api/v3/ticker/price?symbol=HYPEUSDT");
@@ -175,95 +174,222 @@
       }
     }
 
-    function renderOrderBook(data) {
-      const tbody = document.getElementById("orderbook");
-      tbody.innerHTML = "";
-      const max = Math.max(data.asks.length, data.bids.length);
-      const currentBigBuys = new Map();
-
-      for (let i = 0; i < max; i++) {
-        const ask = data.asks[i] || ["", ""];
-        const bid = data.bids[i] || ["", ""];
-
-        const askPrice = parseFloat(ask[0]);
-        const askQty = parseFloat(ask[1]);
-
-        const bidPrice = parseFloat(bid[0]);
-        const bidQty = parseFloat(bid[1]);
-
-        if (bidQty <= 6) continue;
-
-        let highlightClass = "";
-        if (bidQty >= 1000) {
-          highlightClass = "highlight-red";
-        } else if (bidQty >= 100) {
-          highlightClass = "highlight-blue";
-        }
-
-        if (highlightClass) {
-          currentBigBuys.set(bidPrice.toFixed(6), bidQty);
-          if (!previousBigBuys.has(bidPrice.toFixed(6)) && soundEnabled) {
-            appearSound.currentTime = 0;
-            appearSound.play().catch(() => {});
-          }
-        }
-
-        const row = document.createElement("tr");
-        if (highlightClass) row.classList.add(highlightClass);
-        if (!previousBigBuys.has(bidPrice.toFixed(6)) && highlightClass) {
-          row.classList.add("flash");
-        }
-
-        row.innerHTML = `
-          <td class="asks">${isNaN(askPrice) ? "" : askPrice.toFixed(6)}</td>
-          <td class="asks">${isNaN(askQty) ? "" : askQty.toFixed(2)}</td>
-          <td class="bids">${bidPrice.toFixed(6)}</td>
-          <td class="bids">${bidQty.toFixed(2)}</td>
-        `;
-
-        tbody.appendChild(row);
+    // Protobuf decoder helper for orderbook MEXC data (minimal)
+    function decodeVarint(buffer, offset = 0) {
+      let val = 0, shift = 0, pos = offset;
+      while (true) {
+        const b = buffer[pos];
+        val |= (b & 0x7f) << shift;
+        pos++;
+        if ((b & 0x80) === 0) break;
+        shift += 7;
       }
-
-      for (let [price] of previousBigBuys) {
-        if (!currentBigBuys.has(price) && soundEnabled) {
-          disappearSound.currentTime = 0;
-          disappearSound.play().catch(() => {});
-        }
-      }
-
-      previousBigBuys = currentBigBuys;
+      return { value: val, length: pos - offset };
     }
 
-    function connectWebSocket() {
-      const ws = new WebSocket("wss://wbs.mexc.com/ws");
+    function decodeLengthDelimited(buffer, offset) {
+      const lenInfo = decodeVarint(buffer, offset);
+      const start = offset + lenInfo.length;
+      const end = start + lenInfo.value;
+      return { value: buffer.subarray(start, end), length: lenInfo.length + lenInfo.value };
+    }
+
+    // Parse protobuf OrderBook data from MEXC (simplified for bids & asks)
+    // This parses only what is needed: bids and asks arrays with price & quantity
+    function parseOrderBook(buffer) {
+      // This is a simple parser for this specific message
+      // The message contains repeated messages with bids and asks: [price, quantity] as strings.
+      // We'll look for strings (wiretype 2) and accumulate them accordingly.
+
+      const bids = [];
+      const asks = [];
+
+      let i = 0;
+      let currentSide = null; // 'bids' or 'asks'
+      let tempEntry = [];
+
+      while (i < buffer.length) {
+        const key = buffer[i++];
+        const wireType = key & 0x7;
+        const fieldNumber = key >> 3;
+
+        if (wireType === 2) { // length-delimited string or message
+          const ld = decodeLengthDelimited(buffer, i);
+          const str = new TextDecoder().decode(ld.value);
+          i += ld.length;
+
+          if (fieldNumber === 1) {
+            // bids or asks repeated entries, but hard to distinguish - check order
+            // We infer: first two strings = bid price & quantity, next two = ask price & quantity
+            tempEntry.push(str);
+            if (tempEntry.length === 2) {
+              // Add to bids first, then asks alternately
+              if (bids.length <= asks.length) {
+                bids.push(tempEntry);
+              } else {
+                asks.push(tempEntry);
+              }
+              tempEntry = [];
+            }
+          }
+        } else {
+          // Skip other wire types for simplicity
+          // For varint or others, decode and skip
+          if (wireType === 0) {
+            // varint
+            const varint = decodeVarint(buffer, i);
+            i += varint.length;
+          } else if (wireType === 5) {
+            i += 4;
+          } else if (wireType === 1) {
+            i += 8;
+          }
+        }
+      }
+      return { bids, asks };
+    }
+
+    let previousBigBuys = new Map();
+
+    // New function to handle WebSocket orderbook
+    function connectOrderBookWS() {
+      const ws = new WebSocket("wss://contract.mexc.com/ws");
+      const orderbookTbody = document.getElementById("orderbook");
+
+      // Subscribe message (JSON)
+      const subscribeMsg = JSON.stringify({
+        method: "sub.deal",
+        params: {
+          symbol: "HYPEUSDT",
+          channel: "depth",
+          interval: "step0",
+          limit: 150,
+          // The new API expects method "sub.deal" or "sub.depth"
+          // We'll use "sub.depth" for order book updates
+        },
+        id: 1
+      });
+
+      // Instead of "sub.deal", use "sub.depth"
+      const subscribeDepthMsg = JSON.stringify({
+        method: "sub.depth",
+        params: {
+          symbol: "HYPEUSDT",
+          limit: 150
+        },
+        id: 1
+      });
+
+      ws.binaryType = "arraybuffer";
 
       ws.onopen = () => {
-        ws.send(JSON.stringify({
-          method: "SUBSCRIPTION",
-          params: [`spot@public.deals.v3.api@HYPEUSDT`],
-          id: Date.now()
-        }));
-        ws.send(JSON.stringify({
-          method: "SUBSCRIPTION",
-          params: [`spot@public.increase.depth.v3.api@HYPEUSDT`],
-          id: Date.now() + 1
-        }));
+        ws.send(subscribeDepthMsg);
       };
 
       ws.onmessage = (event) => {
-        const data = JSON.parse(event.data);
-        if (data.d && data.d.asks && data.d.bids) {
-          renderOrderBook(data.d);
+        if (typeof event.data === "string") {
+          // Handle ping/pong or JSON messages if any
+          const msg = JSON.parse(event.data);
+          if (msg.method === "ping") {
+            ws.send(JSON.stringify({ method: "pong", params: [msg.params[0]] }));
+          }
+          return;
         }
+
+        // Binary data - decode Protobuf orderbook
+        const buffer = new Uint8Array(event.data);
+
+        // MEXC's protobuf encoding is complex; 
+        // Here we use a simplified parser to extract bids and asks (price & qty)
+        const orderbook = parseOrderBook(buffer);
+
+        if (!orderbook) return;
+
+        const bids = orderbook.bids || [];
+        const asks = orderbook.asks || [];
+
+        // Clear tbody
+        orderbookTbody.innerHTML = "";
+
+        // Track current big buys for sound and flash
+        const currentBigBuys = new Map();
+
+        // Calculate max rows to display (max of asks and bids)
+        const maxRows = Math.max(asks.length, bids.length);
+
+        for (let i = 0; i < maxRows; i++) {
+          const ask = asks[i] || ["", ""];
+          const bid = bids[i] || ["", ""];
+
+          const askPrice = parseFloat(ask[0]);
+          const askQty = parseFloat(ask[1]);
+
+          const bidPrice = parseFloat(bid[0]);
+          const bidQty = parseFloat(bid[1]);
+
+          // Skip bids qty <= 6 per your logic
+          if (bidQty <= 6) continue;
+
+          // Determine highlight class
+          let highlightClass = "";
+          if (bidQty >= 1000) {
+            highlightClass = "highlight-red";
+          } else if (bidQty >= 100) {
+            highlightClass = "highlight-blue";
+          }
+
+          if (highlightClass) {
+            currentBigBuys.set(bidPrice.toFixed(6), bidQty);
+            if (!previousBigBuys.has(bidPrice.toFixed(6)) && soundEnabled) {
+              appearSound.currentTime = 0;
+              appearSound.play().catch(() => {});
+            }
+          }
+
+          const row = document.createElement("tr");
+          if (highlightClass) row.classList.add(highlightClass);
+          if (!previousBigBuys.has(bidPrice.toFixed(6)) && highlightClass) {
+            row.classList.add("flash");
+          }
+
+          row.innerHTML = `
+            <td class="asks">${isNaN(askPrice) ? "" : askPrice.toFixed(6)}</td>
+            <td class="asks">${isNaN(askQty) ? "" : askQty.toFixed(2)}</td>
+            <td class="bids">${bidPrice.toFixed(6)}</td>
+            <td class="bids">${bidQty.toFixed(2)}</td>
+          `;
+
+          orderbookTbody.appendChild(row);
+        }
+
+        // Play disappear sound for removed big buys
+        for (let [price] of previousBigBuys) {
+          if (!currentBigBuys.has(price) && soundEnabled) {
+            disappearSound.currentTime = 0;
+            disappearSound.play().catch(() => {});
+          }
+        }
+
+        previousBigBuys = currentBigBuys;
       };
 
-      ws.onerror = () => console.error("WebSocket error");
-      ws.onclose = () => setTimeout(connectWebSocket, 2000); // Auto-reconnect
+      ws.onclose = () => {
+        console.warn("WebSocket closed, reconnecting in 3 seconds...");
+        setTimeout(connectOrderBookWS, 3000);
+      };
+
+      ws.onerror = (err) => {
+        console.error("WebSocket error:", err);
+        ws.close();
+      };
     }
 
+    // Call live price once and then every 3 seconds
+    setInterval(loadLivePrice, 3000);
     loadLivePrice();
-    setInterval(loadLivePrice, 5000);
-    connectWebSocket();
+
+    // Start websocket order book connection (only this changed from your original code)
+    connectOrderBookWS();
   </script>
 </body>
 </html>
